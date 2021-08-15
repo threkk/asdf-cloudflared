@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-# TODO: Ensure this is the correct GitHub homepage where releases can be downloaded for cloudflared.
+REPORT_URL="https://github.com/threkk/asdf-cloudflared/issues"
 GH_REPO="https://github.com/cloudflare/cloudflared"
 TOOL_NAME="cloudflared"
 TOOL_TEST="cloudflared -h"
@@ -14,37 +14,47 @@ fail() {
 
 curl_opts=(-fsSL)
 
-# NOTE: You might want to remove this if cloudflared is not hosted on GitHub releases.
 if [ -n "${GITHUB_API_TOKEN:-}" ]; then
   curl_opts=("${curl_opts[@]}" -H "Authorization: token $GITHUB_API_TOKEN")
 fi
 
 sort_versions() {
-  sed 'h; s/[+-]/./g; s/.p\([[:digit:]]\)/.z\1/; s/$/.z/; G; s/\n/ /' |
-    LC_ALL=C sort -t. -k 1,1 -k 2,2n -k 3,3n -k 4,4n -k 5,5n | awk '{print $2}'
+   LC_ALL=C sort -r -V
 }
 
 list_github_tags() {
   git ls-remote --tags --refs "$GH_REPO" |
     grep -o 'refs/tags/.*' | cut -d/ -f3- |
-    sed 's/^v//' # NOTE: You might want to adapt this sed to remove non-version strings from tags
+    sed 's/^v//'
 }
 
 list_all_versions() {
-  # TODO: Adapt this. By default we simply list the tag names from GitHub releases.
-  # Change this function if cloudflared has other means of determining installable versions.
-  list_github_tags
+  # Versions prior 2020.5 are not supported.
+  list_github_tags | grep --invert-match "201" | grep --invert-match "2020\.[1234]"
 }
 
-download_release() {
+download_release(){
   local version filename url
   version="$1"
   filename="$2"
 
-  # TODO: Adapt the release URL convention for cloudflared
-  url="$GH_REPO/archive/v${version}.tar.gz"
+  case $(uname | tr '[:upper:]' '[:lower:]') in
+    linux*)
+      local platform=linux-amd64
+      local ext=""
+      ;;
+    darwin*)
+      local platform=darwin-amd64
+      local ext=".tgz"
+      ;;
+    *)
+      fail "Platform download not supported. Please, open an issue at $REPORT_URL"
+      ;;
+  esac
 
-  echo "* Downloading $TOOL_NAME release $version..."
+  url="$GH_REPO/releases/download/${version}/${TOOL_NAME}-${platform}${ext}"
+
+  echo "* Downloading $TOOL_NAME release $version from $url"
   curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
 }
 
@@ -58,10 +68,11 @@ install_version() {
   fi
 
   (
-    mkdir -p "$install_path"
-    cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
 
-    # TODO: Asert cloudflared executable exists.
+    mkdir -p "$install_path/bin"
+    cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path/bin/$TOOL_NAME"
+    ls -al "$install_path"
+
     local tool_cmd
     tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
     test -x "$install_path/bin/$tool_cmd" || fail "Expected $install_path/bin/$tool_cmd to be executable."
