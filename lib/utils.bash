@@ -19,7 +19,7 @@ if [ -n "${GITHUB_API_TOKEN:-}" ]; then
 fi
 
 sort_versions() {
-   LC_ALL=C sort -r -V
+  LC_ALL=C sort -r -V
 }
 
 list_github_tags() {
@@ -33,23 +33,23 @@ list_all_versions() {
   list_github_tags | grep --invert-match "201" | grep --invert-match "2020\.[1234]"
 }
 
-download_release(){
+download_release() {
   local version filename url
   version="$1"
   filename="$2"
 
   case $(uname | tr '[:upper:]' '[:lower:]') in
-    linux*)
-      local platform=linux-amd64
-      local ext=""
-      ;;
-    darwin*)
-      local platform=darwin-amd64
-      local ext=".tgz"
-      ;;
-    *)
-      fail "Platform download not supported. Please, open an issue at $REPORT_URL"
-      ;;
+  linux*)
+    local platform=linux-amd64
+    local ext=""
+    ;;
+  darwin*)
+    local platform=darwin-amd64
+    local ext=".tgz"
+    ;;
+  *)
+    fail "Platform download not supported. Please, open an issue at $REPORT_URL"
+    ;;
   esac
 
   url="$GH_REPO/releases/download/${version}/${TOOL_NAME}-${platform}${ext}"
