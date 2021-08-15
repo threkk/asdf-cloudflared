@@ -70,7 +70,6 @@ install_version() {
   (
 
     mkdir -p "$install_path/bin"
-    ls -al "$ASDF_DOWNLOAD_PATH"
     cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path/bin/$TOOL_NAME"
     chmod +x "$install_path/bin/$TOOL_NAME"
 
