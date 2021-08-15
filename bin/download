@@ -20,7 +20,4 @@ if [[ "$(uname | tr '[:upper:]' '[:lower:]')" =~ darwin* ]]; then
   tar -xzf "$release_file" -C "$ASDF_DOWNLOAD_PATH" --strip-components=1 || fail "Could not extract $release_file"
   # Remove the tar.gz file since we don't need to keep it
   rm "$release_file"
-else
-  # Linux versions need execution permssions.
-  chmod +x "$release_file"
 fi
