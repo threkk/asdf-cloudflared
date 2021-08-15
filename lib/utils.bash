@@ -19,7 +19,7 @@ if [ -n "${GITHUB_API_TOKEN:-}" ]; then
 fi
 
 sort_versions() {
-  LC_ALL=C sort -r -V
+  LC_ALL=C sort -V
 }
 
 list_github_tags() {
